@@ -53,7 +53,7 @@ python src/train.py --data the-verdict.txt --resume --max_iters 4000 --prompt "I
 
 ### 自回归语言模型（next-token prediction）
 - 训练目标是最大化：
-  - \(p(t_1, t_2, ..., t_T) = \prod_i p(t_i \mid t_{<i})\)
+  - `p(t1, t2, ..., tT) = ∏_i p(t_i | t_<i)`（自回归分解）
 - 具体到训练数据就是：
   - 输入 `x = [t0, t1, ..., t(T-1)]`
   - 标签 `y = [t1, t2, ..., tT]`（也就是“右移一位”）
@@ -61,12 +61,12 @@ python src/train.py --data the-verdict.txt --resume --max_iters 4000 --prompt "I
 
 ### 注意力（Q/K/V）与多头
 - 先把输入 embedding 线性映射成 Q/K/V
-- 打分：\(QK^T / \sqrt{d}\)，softmax 得到权重
+- 打分：`QK^T / sqrt(d)`，softmax 得到权重
 - 多头：把通道维拆成 `n_head` 份并行做注意力，最后再拼回去
 - 对应代码：`src/gpt.py:CausalSelfAttention.forward`
 
 ### 因果 Mask（为什么“不能看未来”）
-- 自回归生成时，位置 i 只能用到 \(t_{\le i}\)
+- 自回归生成时，位置 i 只能用到 `t_{<=i}`（也就是只看当前位置及之前的 token）
 - 所以注意力矩阵 (T×T) 必须是**下三角可见**
 - 对应代码：`src/gpt.py` 里 `causal_mask` + `masked_fill(~causal, ...)`
 
@@ -95,8 +95,6 @@ python src/train.py --data the-verdict.txt --resume --max_iters 4000 --prompt "I
 
 3. **最后看生成**
    - `src/gpt.py:GPT.generate`：循环采样并拼接 token
-
-## 常见坑（你很快会遇到）
 
 1. **数据管道**
    - 用 `tiktoken` 把大文本 encode 成 token 序列
